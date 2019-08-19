@@ -3,6 +3,7 @@ package org.jetbrains.plugins.scala.lang.psi.api.expr
 import com.intellij.openapi.components.ServiceManager
 import org.jetbrains.plugins.scala.lang.psi.api.base.types.ScTypeElement
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ExpectedTypes.ParameterType
+import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScParameter
 import org.jetbrains.plugins.scala.lang.psi.types.ScType
 
 /**
@@ -17,6 +18,8 @@ trait ExpectedTypes {
   def expectedExprTypes(expr: ScExpression,
                         withResolvedFunction: Boolean = false,
                         fromUnderscore: Boolean = true): Array[ParameterType]
+
+  def expectedParameterType(p: ScParameter): Option[ScType]
 }
 
 object ExpectedTypes {

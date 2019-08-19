@@ -26,7 +26,7 @@ object ScParameterAnnotator extends ElementAnnotator[ScParameter] {
       case _: ScFunctionExpr =>
         element.typeElement match {
           case None =>
-            element.expectedParamType match {
+            element.expectedParameterType match {
               case None =>
                 holder.createErrorAnnotation(element, "Missing parameter type: " + element.name)
               case _ =>

@@ -12,14 +12,12 @@ import org.jetbrains.plugins.scala.icons.Icons
 import org.jetbrains.plugins.scala.lang.psi.adapters.PsiParameterAdapter
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScPrimaryConstructor
 import org.jetbrains.plugins.scala.lang.psi.api.base.types._
-import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScExpression, ScFunctionExpr, ScUnderScoreSectionUtil}
+import org.jetbrains.plugins.scala.lang.psi.api.expr.{ExpectedTypes, ScExpression, ScFunctionExpr}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScMember}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.{ScImportableDeclarationsOwner, ScModifierListOwner, ScTypedDefinition}
-import org.jetbrains.plugins.scala.lang.psi.types.api.FunctionType
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.psi.types.{ScType, ScTypeExt}
 import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
-import org.jetbrains.plugins.scala.util.SAMUtil
 
 import scala.annotation.tailrec
 
@@ -95,42 +93,6 @@ trait ScParameter extends ScTypedDefinition with ScModifierListOwner
       case _ => false
     }
     case _ => false
-  }
-
-  def expectedParamType: Option[ScType] = getContext match {
-    case clause: ScParameterClause => clause.getContext.getContext match {
-      // For parameter of anonymous functions to infer parameter's type from an appropriate
-      // an. fun's type
-      case f: ScFunctionExpr =>
-        var flag = false
-        var result: Option[ScType] = None //strange logic to handle problems with detecting type
-        for (tp <- f.expectedTypes(fromUnderscore = false) if !flag) {
-          @tailrec
-          def applyForFunction(tp: ScType, checkDeep: Boolean) {
-            tp.removeAbstracts match {
-              case FunctionType(ret, _) if checkDeep => applyForFunction(ret, checkDeep = false)
-              case FunctionType(_, params) if params.length == f.parameters.length =>
-                val i = clause.parameters.indexOf(this)
-                if (result.isDefined) {
-                  result = None
-                  flag = true
-                } else result = Some(params(i))
-              case any if f.isSAMEnabled =>
-                //infer type if it's a Single Abstract Method
-                SAMUtil.toSAMType(any, f) match {
-                  case Some(FunctionType(_, params)) =>
-                    val i = clause.parameters.indexOf(this)
-                    if (i < params.length) result = Some(params(i))
-                  case _ =>
-                }
-              case _ =>
-            }
-          }
-          applyForFunction(tp, ScUnderScoreSectionUtil.underscores(f).nonEmpty)
-        }
-        result
-      case _ => None
-    }
   }
 
   def getTypeNoResolve: PsiType = PsiType.VOID
@@ -218,5 +180,12 @@ trait ScParameter extends ScTypedDefinition with ScModifierListOwner
         }
       case _ => None
     }
+  }
+}
+
+object ScParameter {
+  implicit class ScParameterExt(private val param: ScParameter) extends AnyVal {
+    def expectedParameterType: Option[ScType] =
+      ExpectedTypes.instance().expectedParameterType(param)
   }
 }

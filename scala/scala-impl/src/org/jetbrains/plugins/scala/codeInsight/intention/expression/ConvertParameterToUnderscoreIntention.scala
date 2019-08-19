@@ -86,7 +86,7 @@ object ConvertParameterToUnderscoreIntention {
     }
 
     for (p <- expr.parameters.reverse) {
-      val expectedType = p.expectedParamType
+      val expectedType = p.expectedParameterType
       val declaredType = p.typeElement
       val newParam = declaredType match {
         case None => "_"
