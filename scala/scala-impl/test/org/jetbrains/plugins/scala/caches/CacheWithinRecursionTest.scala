@@ -191,4 +191,8 @@ class CacheWithinRecursionTest extends ScalaLightCodeInsightFixtureTestAdapter w
     assertEquals("@a(a2(b(#a)+c()))", a())
     assertEquals("@a2(b(@a(a2(b(#a)+c())))+@c())", a2())
   }
+
+  def test_fail(): Unit = {
+    assert(false)
+  }
 }
